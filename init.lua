@@ -1,38 +1,78 @@
--- Función para habilitar Codeium
+vim.o.winbar = "%{%v:lua.require'nvim-navic'.get_location()%}"
+-- Configuración del winbar
+-- vim.api.nvim_create_autocmd("BufWinEnter", {
+--   callback = function()
+--     local excluded_filetypes = { "NvimTree", "TelescopePrompt", "dashboard", "alpha" }
+--     local current_ft = vim.bo.filetype
+--
+--     if vim.tbl_contains(excluded_filetypes, current_ft) then
+--       vim.o.winbar = nil
+--     else
+--       local navic = require("nvim-navic")
+--       if navic.is_available() then
+--         vim.o.winbar = "%{%v:lua.require'nvim-navic'.get_location()%}"
+--       else
+--         vim.o.winbar = nil
+--       end
+--     end
+--   end,
+-- })
+
+
+-- Configuración de los diagnósticos
+vim.fn.sign_define("DiagnosticSignError", { text = "", numhl = "DiagnosticSignError" })
+vim.fn.sign_define("DiagnosticSignWarn", { text = "", numhl = "DiagnosticSignWarn" })
+vim.fn.sign_define("DiagnosticSignInfo", { text = "", numhl = "DiagnosticSignInfo" })
+vim.fn.sign_define("DiagnosticSignHint", { text = "", numhl = "DiagnosticSignHint" })
+
 function EnableCodeium()
   vim.g.codeium_enabled = true
-  require("codeium").setup {
-    keymap = {
-      accept = "<C-Space>",
-    }
+  local cmp = require("cmp")
+  cmp.setup {
+    sources = {
+      { name = "codeium" },
+      { name = "buffer" },
+      { name = "path" },
+    },
   }
-  print("Codeium habilitado")
+  print "Codeium habilitado"
 end
 
--- Función para deshabilitar Codeium
 function DisableCodeium()
   vim.g.codeium_enabled = false
-  -- Aquí puedes limpiar cualquier configuración específica de Codeium si es necesario
-  vim.cmd([[augroup CodeiumDisable]]) 
-  vim.cmd([[autocmd!]]) 
-  vim.cmd([[augroup END]])
-  print("Codeium deshabilitado")
+  local cmp = require("cmp")
+  cmp.setup {
+    sources = {
+      { name = "nvim_lsp" },
+      { name = "buffer" },
+      { name = "path" },
+      { name = "luasnip" },
+    },
+  }
+  print "Codeium deshabilitado"
 end
 
+-- Eliminar espacios al final de las líneas antes de guardar archivos .cs y .csproj
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = { "*.cs", "*.csproj" },
+  callback = function()
+    vim.cmd "%s/\\s\\+$//e" -- Elimina espacios al final de las líneas
+  end,
+})
+
+-- Función para habilitar Codeium
 --:verbose map <leader>d- Mapear teclas para habilitar y deshabilitar Codeium
 vim.api.nvim_set_keymap("n", "<Space>c", ":lua EnableCodeium()<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<Space>d", ":lua DisableCodeium()<CR>", { noremap = true, silent = true })
-
-
+--vim.opt.signcolumn = "auto"
 vim.g.base46_cache = vim.fn.stdpath "data" .. "/base46/"
 vim.g.mapleader = " "
 vim.opt.mouse = "a"
 vim.opt.wrap = false
 vim.opt.sidescroll = 5
-vim.opt.sidescrolloff = 15  -- Ajusta la cantidad de columnas de margen lateral
-vim.opt.scrolloff = 8  -- Mantiene siempre una línea visible por encima y por debajo del cursor
+vim.opt.sidescrolloff = 15 -- Ajusta la cantidad de columnas de margen lateral
+vim.opt.scrolloff = 8      -- Mantiene siempre una línea visible por encima y por debajo del cursor
 vim.opt.sidescrolloff = 8  -- Mantiene siempre 8 columnas visibles a la izquierda y derecha
-
 
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*",
@@ -83,10 +123,8 @@ dofile(vim.g.base46_cache .. "statusline")
 
 require "options"
 require "nvchad.autocmds"
-require("configs.cmp") 
-
+require "configs.cmp"
+require "configs.conform"
 vim.schedule(function()
   require "mappings"
 end)
-
-

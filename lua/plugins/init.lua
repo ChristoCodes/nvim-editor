@@ -1,24 +1,45 @@
 return {
 
   {
+    "williamboman/mason.nvim",
+    "williamboman/mason-lspconfig.nvim",
+    config = function()
+      require("mason").setup()
+      require("mason-lspconfig").setup {
+        automatic_installation = true, -- Activa la instalación automática
+      }
+    end,
+  },
+
+  {
+    "SmiteshP/nvim-navic",
+    dependencies = "neovim/nvim-lspconfig",
+    config = function()
+      require("nvim-navic").setup() -- Solo inicializa `nvim-navic` con su configuración predeterminada
+    end,
+  },
+
+
+  {
     "Exafunction/codeium.nvim",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "hrsh7th/nvim-cmp",
     },
+    event = "InsertEnter",
     config = function()
-      require("codeium").setup {        
-      }
+      require("codeium").setup {}
     end,
     lazy = false,
   },
-
 
   {
     "lewis6991/gitsigns.nvim",
     event = "BufRead",
     config = function()
       require("gitsigns").setup {
+        signcolumn = true,
+        attach_to_untracked = false,
         signs = {
           add = { text = "┃" },
           change = { text = "┃" },
@@ -37,8 +58,8 @@ return {
         },
         signs_staged_enable = true,
         signcolumn = true, -- Toggle with `:Gitsigns toggle_signs`
-        numhl = false, -- Toggle with `:Gitsigns toggle_numhl`
-        linehl = false, -- Toggle with `:Gitsigns toggle_linehl`
+        numhl = false,     -- Toggle with `:Gitsigns toggle_numhl`
+        linehl = false,    -- Toggle with `:Gitsigns toggle_linehl`
         word_diff = false, -- Toggle with `:Gitsigns toggle_word_diff`
         watch_gitdir = {
           follow_files = true,
@@ -57,7 +78,7 @@ return {
         current_line_blame_formatter = "<author>, <author_time:%R> - <summary>",
         sign_priority = 6,
         update_debounce = 100,
-        status_formatter = nil, -- Use default
+        status_formatter = nil,  -- Use default
         max_file_length = 40000, -- Disable if file is longer than this (in lines)
         preview_config = {
           -- Options passed to nvim_open_win
@@ -84,7 +105,7 @@ return {
     config = function()
       require("diffview").setup {
         enhanced_diff_hl = true, -- Mejora el resaltado de diferencias
-        use_icons = true, -- Muestra íconos
+        --use_icons = true, -- Muestra íconos
       }
     end,
   },
@@ -95,15 +116,16 @@ return {
     config = function()
       require("scrollview").setup {
         current_only = false,
-        signs_on_scrollbar = true,
+        signs_on_scrollbar = false,
         excluded_filetypes = { "NvimTree", "vista_kind" },
         base = "window",
-        scroll_speed = 5,
+        scroll_speed = 9,
         signs_on = true,
-        winblend = 85,
+        winblend = 45,
       }
     end,
   },
+
   -- These are some examples, uncomment them if you want to see them work!
   {
     "neovim/nvim-lspconfig",
@@ -114,6 +136,7 @@ return {
 
   {
     "hrsh7th/nvim-cmp",
+    event = "InsertEnter",
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
@@ -125,6 +148,21 @@ return {
     config = function()
       local cmp = require "cmp"
       cmp.setup {
+        window = {
+          completion = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered(),
+        },
+        experimental = {
+          ghost_text = true, -- Muestra un texto fantasma mientras seleccionas sugerencias
+        },
+        formatting = {
+          fields = { "abbr", "kind", "menu" },
+          format = function(entry, vim_item)
+            -- Mostrar texto completo sin truncar
+            vim_item.abbr = vim_item.abbr:sub(1, 1000) -- Ajusta el tamaño máximo si es necesario
+            return vim_item
+          end,
+        },
         snippet = {
 
           expand = function(args)
@@ -158,6 +196,14 @@ return {
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
           { name = "luasnip" },
+          {
+            name = "codeium",
+            max_item_count = 9,
+            option = {
+              max_len = 1000,
+              max_lines = 20,
+            },
+          },
         }, {
           { name = "buffer" },
         }),
@@ -165,13 +211,13 @@ return {
     end,
   },
   {
-    "folke/trouble.nvim", -- Agrega trouble.nvim
+    "folke/trouble.nvim",                             -- Agrega trouble.nvim
     dependencies = { "nvim-tree/nvim-web-devicons" }, -- Asegúrate de tener esto también
     config = function()
       require("trouble").setup {
         -- Aquí puedes agregar opciones de configuración
-        icons = true, -- Mostrar íconos
-        height = 20, -- Altura de la ventana de Trouble
+        --icons = true, -- Mostrar íconos
+        height = 40, -- Altura de la ventana de Trouble
         -- Otras opciones de configuración...
       }
     end,
@@ -181,16 +227,25 @@ return {
     "nvim-tree/nvim-tree.lua",
     config = function()
       require("nvim-tree").setup {
+        view = {
+          --width = 15, -- Aumenta el ancho del explorador
+          adaptive_size = true,
+          side = "left",
+        },
         renderer = {
+          group_empty = true,
+          special_files = { "Makefile", "README.md", "readme.md", "*.csproj" }, -- Asegúrate de incluir .csproj aquí
           icons = {
+            --padding = " ",
             show = {
               file = true,
               folder = true,
               folder_arrow = true,
             },
+            padding = "",
             glyphs = {
-              default = "",
-              symlink = "",
+              --default = "",
+              --symlink = "",
               folder = {
                 arrow_closed = "▶", -- Flecha para carpetas colapsadas
                 arrow_open = "▼", -- Flecha para carpetas abiertas
@@ -201,17 +256,13 @@ return {
                 symlink = " ", -- Enlace simbólico
                 symlink_open = " ",
               },
-              git = {
-                unstaged = "✗",
-                staged = "✓",
-                unmerged = "",
-                renamed = "➜",
-                untracked = "★",
-                deleted = " ",
-                ignored = "◌",
-              },
             },
           },
+          --highlight_git = true,
+          highlight_opened_files = "name",
+        },
+        filters = {
+          dotfiles = false,
         },
       }
     end,
@@ -243,10 +294,10 @@ return {
     config = function()
       require("lualine").setup {
         options = {
-          theme = "material-darker",
-          icons_enabled = true,
+          --theme = "material-darker",
+          --icons_enabled = true,
           --component_separators = "|", -- Separadores entre los componentes
-          section_separators = { left = "", right = "" }, -- Cambia los separadores de sección
+          --section_separators = { left = "", right = "" }, -- Cambia los separadores de sección
           always_divide_middle = true, -- Asegúrate de que la línea de estado ocupe todo el ancho
           global_status = true,
         },
@@ -267,10 +318,10 @@ return {
     run = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup {
-        ensure_installed = { "lua", "javascript", "typescript", "html", "css", "python" }, -- Añade los lenguajes que quieras
+        ensure_installed = { "lua", "javascript", "typescript", "html", "css", "python", "c_sharp" }, -- Añade los lenguajes que quieras
         highlight = {
-          enable = true, -- Activa el resaltado de sintaxis basado en Treesitter
-          additional_vim_regex_highlighting = false, -- Desactiva el resaltado predeterminado de Vim
+          enable = true,                                                                              -- Activa el resaltado de sintaxis basado en Treesitter
+          additional_vim_regex_highlighting = false,                                                  -- Desactiva el resaltado predeterminado de Vim
         },
       }
     end,

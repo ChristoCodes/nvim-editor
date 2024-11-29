@@ -6,7 +6,9 @@
 local M = {}
 
 M.base46 = {
-  theme = "radium",
+  theme = "flexoki",
+  theme_toggle = { "flexoki", "one_light" },
+  
   --transparency = true, -- Cambia a true si quieres transparencia
   --theme_toggle = true; -- Cambia a true si quieres el cambio de temas
   hl_override = {
@@ -25,21 +27,6 @@ M.base46 = {
   },
 }
 
-M.ui = {
-  nvim_tree = {
-    icons = {
-      default = "",
-      symlink = "",
-      git = {
-        unstaged = "✗",
-        staged = "✓",
-        unmerged = "",
-        renamed = "➜",
-        deleted = "",
-        untracked = "★",
-      },
-    },
-  },
-}
+
 
 return M
